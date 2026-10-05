@@ -233,7 +233,10 @@ section.light .year-top .year{background:var(--gold);-webkit-background-clip:tex
 .ferr{color:#e8b07a;font-size:14px;margin:0}
 #leadBtn{max-width:100%;white-space:normal}
 @media (max-width:759px){#leadBtn,#sendBtn{width:100%}}
-.yform iframe{width:100%;height:640px;border:0;border-radius:20px;background:#fff;display:block}
+.yform iframe{width:100%;height:560px;border:0;display:block;background:transparent;transition:height .3s}
+.yform iframe.sent{height:270px}
+@media (max-width:759px){.yform iframe{height:640px}.yform iframe.sent{height:330px}}
+.yform{border-radius:20px;overflow:hidden;background:#1b1b1b}
 .yform{margin-top:6px}
 /* ---- bottom ---- */
 .bottom-img{display:block;width:100%;height:auto;border-radius:20px;margin-bottom:34px}
@@ -470,7 +473,16 @@ document.getElementById("leadBtn").onclick=()=>{
   const box=document.getElementById("yform");
   if(!FORM_URL){box.textContent="Форма заявки ещё не подключена.";box.classList.remove("hidden");return;}
   const url=FORM_URL+(FORM_URL.includes("?")?"&":"?")+"iframe=1&"+leadParams();
-  box.innerHTML='<iframe src="'+url+'" title="Заявка на финансовую модель" loading="lazy"></iframe>';
+  const fid=FORM_URL.replace(/\/+$/,"").split("/").pop();
+  box.innerHTML='<iframe src="'+url+'" name="ya-form-'+fid+'" title="Заявка на финансовую модель" frameborder="0"></iframe>';
+  const fr=box.querySelector("iframe"); let loads=0;
+  const shrink=()=>{fr.classList.add("sent");};
+  fr.addEventListener("load",()=>{loads++; if(loads>1)shrink();});
+  window.addEventListener("message",e=>{
+    try{ if(!/(^|\.)forms\.yandex\.ru$/.test(new URL(e.origin).hostname))return;
+      const t=(typeof e.data==="string"?e.data:JSON.stringify(e.data||"")).toLowerCase();
+      if(/submit|success|sent/.test(t))shrink(); }catch(err){}
+  });
   document.getElementById("leadBtn").classList.add("hidden"); box.classList.remove("hidden");
 };
 renderQ();
